@@ -1,16 +1,23 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from dotenv import load_dotenv
 
-# Настройки подключения к БД
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///inventory.db")
+load_dotenv()
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+DATABASE_URI = os.getenv("DATABASE_URI")
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+if DATABASE_URI is None:
+    raise RuntimeError("DATABASE_URI не найден")
+
+engine = create_engine(
+    DATABASE_URI,
+)
+
+SessionLocal = sessionmaker(
+    bind=engine,
+    autoflush=False,
+)
+
+class Base(DeclarativeBase):
+    pass

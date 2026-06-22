@@ -16,8 +16,6 @@ def create_category(name: str):
         db.rollback()
         print(f"Ошибка: категория '{name}' уже существует.")
         return None
-    finally:
-        db.close()
 
 def get_all_categories():
     db = next(get_db())
@@ -28,12 +26,11 @@ def get_all_categories():
         print("\nВсе категории:")
         for cat in categories:
             print(f"{cat.id}. {cat.name}")
-    db.close()
+    return categories
 
 def get_category_by_id(category_id: int):
     db = next(get_db())
     category = db.query(Category).filter(Category.id == category_id).first()
-    db.close()
     return category
 
 def update_category_name(category_id: int, new_name: str):
@@ -49,8 +46,6 @@ def update_category_name(category_id: int, new_name: str):
     except Exception as e:
         db.rollback()
         print(f"Ошибка обновления: {e}")
-    finally:
-        db.close()
 
 def delete_category(category_id: int):
     db = next(get_db())
@@ -65,8 +60,6 @@ def delete_category(category_id: int):
     except Exception as e:
         db.rollback()
         print(f"Ошибка удаления: {e}")
-    finally:
-        db.close()
 
 def create_supplier(name: str, phone: str = None, email: str = None):
     db = next(get_db())
@@ -81,8 +74,6 @@ def create_supplier(name: str, phone: str = None, email: str = None):
         db.rollback()
         print(f"Ошибка: поставщик '{name}' уже существует.")
         return None
-    finally:
-        db.close()
 
 def get_all_suppliers():
     db = next(get_db())
@@ -92,8 +83,14 @@ def get_all_suppliers():
     else:
         print("\nВсе поставщики:")
         for sup in suppliers:
-            print(f"{sup.id}. {sup.name} | {sup.phone or 'Нет номера'} | {sup.email or 'Нет email'}")
-    db.close()
+            status = "Активен" if sup.is_active else "Неактивен"
+            print(
+                f"{sup.id}. {sup.name} | "
+                f"Телефон: {sup.phone or 'Не указан'} | "
+                f"Email: {sup.email or 'Не указан'} | "
+                f"Статус: {status}"
+            )
+    return suppliers
 
 def deactivate_supplier(supplier_id: int):
     db = next(get_db())
@@ -108,8 +105,6 @@ def deactivate_supplier(supplier_id: int):
     except Exception as e:
         db.rollback()
         print(f"Ошибка деактивации: {e}")
-    finally:
-        db.close()
 
 def delete_supplier(supplier_id: int):
     db = next(get_db())
@@ -124,8 +119,6 @@ def delete_supplier(supplier_id: int):
     except Exception as e:
         db.rollback()
         print(f"Ошибка удаления: {e}")
-    finally:
-        db.close()
 
 def create_product(
     name: str, sku: str, category_id: int,
@@ -148,8 +141,6 @@ def create_product(
         db.rollback()
         print(f"Ошибка: товар с SKU '{sku}' уже существует.")
         return None
-    finally:
-        db.close()
 
 def get_all_products():
     db = next(get_db())
@@ -161,14 +152,14 @@ def get_all_products():
         for prod in products:
             print(
                 f"{prod.id}. {prod.name} (SKU: {prod.sku}) | "
-                f"Закупочная: {prod.purchase_price} | Продажная: {prod.selling_price}"
+                f"Закупочная: {prod.purchase_price} | Продажная: {prod.selling_price} | "
+                f"Мин. остаток: {prod.min_quantity} | Статус: {status}"
             )
-    db.close()
+    return products
 
 def get_product_by_id(product_id: int):
     db = next(get_db())
     product = db.query(Product).filter(Product.id == product_id).first()
-    db.close()
     return product
 
 def get_products_by_category(category_id: int):
@@ -180,7 +171,7 @@ def get_products_by_category(category_id: int):
         print(f"\nТовары в категории ID {category_id}:")
         for prod in products:
             print(f"{prod.id}. {prod.name}")
-    db.close()
+    return products
 
 def get_products_by_supplier(supplier_id: int):
     db = next(get_db())
@@ -191,7 +182,7 @@ def get_products_by_supplier(supplier_id: int):
         print(f"\nТовары поставщика ID {supplier_id}:")
         for prod in products:
             print(f"{prod.id}. {prod.name}")
-    db.close()
+    return products
 
 def update_product_prices(product_id: int, purchase_price: Decimal, selling_price: Decimal):
     db = next(get_db())
@@ -207,8 +198,6 @@ def update_product_prices(product_id: int, purchase_price: Decimal, selling_pric
     except Exception as e:
         db.rollback()
         print(f"Ошибка обновления цен: {e}")
-    finally:
-        db.close()
 
 def update_product_min_quantity(product_id: int, min_qty: int):
     db = next(get_db())
@@ -223,8 +212,6 @@ def update_product_min_quantity(product_id: int, min_qty: int):
     except Exception as e:
         db.rollback()
         print(f"Ошибка обновления минимального остатка: {e}")
-    finally:
-        db.close()
 
 def deactivate_product(product_id: int):
     db = next(get_db())
@@ -239,8 +226,6 @@ def deactivate_product(product_id: int):
     except Exception as e:
         db.rollback()
         print(f"Ошибка деактивации: {e}")
-    finally:
-        db.close()
 
 def delete_product(product_id: int):
     db = next(get_db())
@@ -255,8 +240,6 @@ def delete_product(product_id: int):
     except Exception as e:
         db.rollback()
         print(f"Ошибка удаления: {e}")
-    finally:
-        db.close()
 
 def create_stock_movement(product_id: int, movement_type: str, quantity: float, comment: str = None):
     db = next(get_db())
@@ -274,8 +257,6 @@ def create_stock_movement(product_id: int, movement_type: str, quantity: float, 
         db.rollback()
         print(f"Ошибка создания операции: {e}")
         return None
-    finally:
-        db.close()
 
 def get_all_stock_movements():
     db = next(get_db())
@@ -288,9 +269,9 @@ def get_all_stock_movements():
             print(
                 f"{move.id}. Товар ID {move.product_id} | "
                 f"Тип: {move.movement_type} | Кол-во: {move.quantity} | "
-                f"Дата: {move.created_at}"
+                f"Дата: {move.created_at} | Комментарий: {move.comment or 'Без комментария'}"
             )
-    db.close()
+    return movements
 
 def get_movements_by_product(product_id: int):
     db = next(get_db())
@@ -305,7 +286,7 @@ def get_movements_by_product(product_id: int):
                 f"Кол-во: {move.quantity} | Дата: {move.created_at} | "
                 f"Комментарий: {move.comment or 'Без комментария'}"
             )
-    db.close()
+    return movements
 
 def delete_stock_movement(movement_id: int):
     db = next(get_db())
@@ -320,5 +301,3 @@ def delete_stock_movement(movement_id: int):
     except Exception as e:
         db.rollback()
         print(f"Ошибка удаления операции: {e}")
-    finally:
-        db.close()

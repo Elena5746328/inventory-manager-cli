@@ -6,7 +6,8 @@ from sqlalchemy import (
     Float,
     DateTime,
     ForeignKey,
-    CheckConstraint
+    CheckConstraint,
+    Boolean
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
