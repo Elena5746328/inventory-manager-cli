@@ -32,6 +32,8 @@ class Supplier(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    products = relationship("Product", back_populates="supplier")
+
 class Product(Base):
     __tablename__ = "products"
 

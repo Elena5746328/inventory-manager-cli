@@ -1,10 +1,10 @@
-from database import get_db
+from database import SessionLocal
 from models import Category, Supplier, Product, StockMovement
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
 
-def create_category(name: str):
-    db = next(get_db())
+def create_category(name: str): 
+    db = SessionLocal()
     try:
         category = Category(name=name)
         db.add(category)
@@ -18,7 +18,7 @@ def create_category(name: str):
         return None
 
 def get_all_categories():
-    db = next(get_db())
+    db = SessionLocal()
     categories = db.query(Category).all()
     if not categories:
         print("Категории не найдены.")
@@ -29,12 +29,12 @@ def get_all_categories():
     return categories
 
 def get_category_by_id(category_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     category = db.query(Category).filter(Category.id == category_id).first()
     return category
 
 def update_category_name(category_id: int, new_name: str):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         category = db.query(Category).filter(Category.id == category_id).first()
         if category:
@@ -48,7 +48,7 @@ def update_category_name(category_id: int, new_name: str):
         print(f"Ошибка обновления: {e}")
 
 def delete_category(category_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         category = db.query(Category).filter(Category.id == category_id).first()
         if category:
@@ -62,7 +62,7 @@ def delete_category(category_id: int):
         print(f"Ошибка удаления: {e}")
 
 def create_supplier(name: str, phone: str = None, email: str = None):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         supplier = Supplier(name=name, phone=phone, email=email)
         db.add(supplier)
@@ -76,7 +76,7 @@ def create_supplier(name: str, phone: str = None, email: str = None):
         return None
 
 def get_all_suppliers():
-    db = next(get_db())
+    db = SessionLocal()
     suppliers = db.query(Supplier).all()
     if not suppliers:
         print("Поставщики не найдены.")
@@ -93,7 +93,7 @@ def get_all_suppliers():
     return suppliers
 
 def deactivate_supplier(supplier_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
         if supplier:
@@ -107,7 +107,7 @@ def deactivate_supplier(supplier_id: int):
         print(f"Ошибка деактивации: {e}")
 
 def delete_supplier(supplier_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         supplier = db.query(Supplier).filter(Supplier.id == supplier_id).first()
         if supplier:
@@ -125,7 +125,7 @@ def create_product(
     supplier_id: int = None, purchase_price: Decimal = 0,
     selling_price: Decimal = 0, min_quantity: int = 0
 ):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         product = Product(
             name=name, sku=sku, category_id=category_id,
@@ -143,7 +143,7 @@ def create_product(
         return None
 
 def get_all_products():
-    db = next(get_db())
+    db = SessionLocal()
     products = db.query(Product).all()
     if not products:
         print("Товары не найдены.")
@@ -153,28 +153,35 @@ def get_all_products():
             print(
                 f"{prod.id}. {prod.name} (SKU: {prod.sku}) | "
                 f"Закупочная: {prod.purchase_price} | Продажная: {prod.selling_price} | "
-                f"Мин. остаток: {prod.min_quantity} | Статус: {status}"
+                f"Мин. остаток: {prod.min_quantity} | Статус: {prod.is_active}"
             )
     return products
 
 def get_product_by_id(product_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     product = db.query(Product).filter(Product.id == product_id).first()
     return product
 
-def get_products_by_category(category_id: int):
-    db = next(get_db())
-    products = db.query(Product).filter(Product.category_id == category_id).all()
-    if not products:
-        print("Товары в этой категории не найдены.")
-    else:
-        print(f"\nТовары в категории ID {category_id}:")
-        for prod in products:
-            print(f"{prod.id}. {prod.name}")
-    return products
+def get_products_by_category():
+    db = SessionLocal()
+    categories = db.query(Category).all()
+    if not categories:
+        print("Нет категорий.")
+        return
+    for cat in categories:
+        products = db.query(Product).filter(
+            Product.category_id == cat.id, 
+            Product.is_active == True
+        ).all()
+        if products:
+            print(f"\nКатегория: {cat.name}")
+            for prod in products:
+                print(f"- {prod.name} (SKU: {prod.sku})")
+        else:
+            print(f"\nКатегория: {cat.name} — активных товаров нет.")
 
 def get_products_by_supplier(supplier_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     products = db.query(Product).filter(Product.supplier_id == supplier_id).all()
     if not products:
         print("Товары этого поставщика не найдены.")
@@ -185,7 +192,7 @@ def get_products_by_supplier(supplier_id: int):
     return products
 
 def update_product_prices(product_id: int, purchase_price: Decimal, selling_price: Decimal):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         product = db.query(Product).filter(Product.id == product_id).first()
         if product:
@@ -200,7 +207,7 @@ def update_product_prices(product_id: int, purchase_price: Decimal, selling_pric
         print(f"Ошибка обновления цен: {e}")
 
 def update_product_min_quantity(product_id: int, min_qty: int):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         product = db.query(Product).filter(Product.id == product_id).first()
         if product:
@@ -214,7 +221,7 @@ def update_product_min_quantity(product_id: int, min_qty: int):
         print(f"Ошибка обновления минимального остатка: {e}")
 
 def deactivate_product(product_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         product = db.query(Product).filter(Product.id == product_id).first()
         if product:
@@ -228,7 +235,7 @@ def deactivate_product(product_id: int):
         print(f"Ошибка деактивации: {e}")
 
 def delete_product(product_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         product = db.query(Product).filter(Product.id == product_id).first()
         if product:
@@ -242,7 +249,7 @@ def delete_product(product_id: int):
         print(f"Ошибка удаления: {e}")
 
 def create_stock_movement(product_id: int, movement_type: str, quantity: float, comment: str = None):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         movement = StockMovement(
             product_id=product_id, movement_type=movement_type,
@@ -259,7 +266,7 @@ def create_stock_movement(product_id: int, movement_type: str, quantity: float, 
         return None
 
 def get_all_stock_movements():
-    db = next(get_db())
+    db = SessionLocal()
     movements = db.query(StockMovement).all()
     if not movements:
         print("Складские операции не найдены.")
@@ -274,7 +281,7 @@ def get_all_stock_movements():
     return movements
 
 def get_movements_by_product(product_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     movements = db.query(StockMovement).filter(StockMovement.product_id == product_id).all()
     if not movements:
         print(f"Операции для товара ID {product_id} не найдены.")
@@ -289,7 +296,7 @@ def get_movements_by_product(product_id: int):
     return movements
 
 def delete_stock_movement(movement_id: int):
-    db = next(get_db())
+    db = SessionLocal()
     try:
         movement = db.query(StockMovement).filter(StockMovement.id == movement_id).first()
         if movement:
